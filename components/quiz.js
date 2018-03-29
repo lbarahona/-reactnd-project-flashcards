@@ -1,265 +1,151 @@
-import React, {Component} from 'react'
-import {StyleSheet, View} from 'react-native'
-import {connect} from 'react-redux'
-import {Card, Button, Text} from 'react-native-elements'
-import {NavigationActions} from 'react-navigation'
+import React, { Component } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { connect } from 'react-redux';
+import { styles } from '../helpers/styles';
+import { Card } from './Card';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../helpers/colors';
+import { clearLocalNotification, setLocalNotification } from '../helpers/notifications';
+import { NavigationActions } from 'react-navigation';
 
 class Quiz extends Component {
+    state = {
+        questions: [],
+        currentQuestionIndex: 0,
+        showQuestion: true
+    };
 
-  state = {
-    correct: 0,
-    incorrect: 0,
-    skipped: 0,
-    showAnswer: false,
-    total: this.props.navigation.state.params.deck.questions.length,
-    current: 0,
-    questions: this.props.navigation.state.params.deck.questions
-  }
+    static navigationOptions = () => {
+        return {
+            title: 'Quiz'
+        }
+    };
 
-  handleSkip = () => {
-    const skipCount = this.state.skipped
-    const current = this.state.current
-    this.setState({
-      skipped: skipCount + 1,
-      current: current + 1,
-      showAnswer: false
-    })
-  }
+    componentDidMount() {
+        const {decks, navigation} = this.props;
 
-  handleAnswer = (ans) => {
-    let correctCount = this.state.correct
-    let incorrectCount = this.state.incorrect
-    const current = this.state.current
-    const currentAns = this.state.questions[current].answer
-    ans === currentAns
-      ? correctCount += 1
-      : incorrectCount += 1
-    this.setState({
-      correct: correctCount,
-      incorrect: incorrectCount,
-      current: current + 1
-    })
-  }
+        const deck = Object.entries(decks).find(
+            deck => {
+                return deck[1].title === navigation.state.params.deckId;
+            }
+        );
 
-  render() {
-    const currentQuesNo = this.state.current + 1
-    const leftQuestionNo = this.state.total - currentQuesNo
-    const totalQues = this.state.total
+        const questions = deck[1].questions.map((question) => {
+            return {
+                question: question.question,
+                answer: question.answer,
+                correct: false
+            }
+        });
 
-    const resetAction = NavigationActions.reset({
-      index: 1,
-      actions: [
-        NavigationActions.navigate({routeName: 'DecksList'}),
-        NavigationActions.navigate({
-          routeName: 'Quiz',
-          params: {
-            title: this.props.navigation.state.params.deck.title,
-            deck: this.props.navigation.state.params.deck
-          }
-        })
-      ]
-    })
+        this.setState({questions});
 
-    const resetActionDeck = NavigationActions.reset({
-      index: 1,
-      actions: [
-        NavigationActions.navigate({routeName: 'DecksList'}),
-        NavigationActions.navigate({
-          routeName: 'DeckDetail',
-          params: {
-            title: this.props.navigation.state.params.deck.title
-          }
-        })
-      ]
-    })
+        clearLocalNotification()
+            .then(setLocalNotification)
+    }
 
-    return (<View style={styles.container}>
-      {
-        currentQuesNo <= totalQues
-          ? <View style={{
-                alignItems: 'center',
-                justifyContent: 'space-around'
-              }}>
-              <Text h4>Question {currentQuesNo}
-                ({`${leftQuestionNo} left`})</Text>
-              <View style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center'
-                }}>
+    resetQuiz = () => {
+        const questions = this.state.questions.map((question) => {
+            return { question: question.question, answer: question.answer, correct: false }
+        });
 
-                <Text style={{
-                    fontSize: 22,
-                    fontWeight: '300'
-                  }}>
-                  <Text style={{
-                      fontSize: 22,
-                      fontWeight: '400'
-                    }}>Q:
-                  </Text>{this.state.questions[currentQuesNo - 1].question}</Text>
-              </View>
+        this.setState({questions, currentQuestionIndex: 0, showQuestion: true});
+    };
 
-              {
-                !this.state.showAnswer
-                  ? <View style={{
-                        flexDirection: 'row',
-                        flex: 2,
-                        alignItems: 'center'
-                      }}>
-                      <View style={{
-                          width: '35%',
-                          marginRight: '5%'
-                        }}>
-                        <Button raised icon={{
-                            size: 35
-                          }} title='True' backgroundColor='#00E676' borderRadius={30} fontSize={18} onPress={() => {
-                            this.handleAnswer(true)
-                          }} fontWeight="500"/>
-                      </View>
-                      <View style={{
-                          width: '35%',
-                          marginLeft: '5%'
-                        }}>
-                        <Button raised icon={{
-                            size: 35
-                          }} title='False' backgroundColor='#FF5252' borderRadius={30} onPress={() => {
-                            this.handleAnswer(false)
-                          }} fontSize={18} fontWeight="500"/>
-                      </View>
-                    </View>
-                  : <View>
-                      <Text h3>{`${this.state.questions[currentQuesNo - 1].answer}`}</Text>
-                    </View>
-              }
+    handleButtons = (status) => {
+        const questions = this.state.questions;
+        questions[this.state.currentQuestionIndex].correct = status;
 
-              <View style={{
-                  width: '100%',
-                  flex: 1.2,
-                  flexDirection: 'column',
-                  justifyContent: 'space-around'
-                }}>
-                {
-                  !this.state.showAnswer && <View>
-                      <Button raised title="Show Answer" large backgroundColor='#FF7043' borderRadius={5} fontSize={20} fontWeight="500" onPress={() => {
-                          this.setState({showAnswer: true})
-                        }}/>
-                    </View>
+        this.setState({questions, currentQuestionIndex: this.state.currentQuestionIndex + 1, showQuestion: true});
+    };
+
+    toggleQuestion = () => {
+        this.setState({showQuestion: !this.state.showQuestion});
+    };
+
+    render() {
+        return (
+            <View style={styles.container}>
+                {this.state.questions.length > 0 &&
+                this.state.currentQuestionIndex < this.state.questions.length &&
+                <Card index={this.state.currentQuestionIndex}
+                      showQuestion={this.state.showQuestion}
+                      questions={this.state.questions}
+                      onQuestionPress={this.toggleQuestion}
+                      onButtonPress={this.handleButtons}
+                />
                 }
+                {this.state.questions.length > 0 &&
+                this.state.currentQuestionIndex >= this.state.questions.length &&
+                <View style={styles.container}>
+                    <View style={{flex: 1, justifyContent: 'flex-end', alignItems: 'center'}}>
+                        {this.state.questions.filter(question => question.correct).length === this.state.questions.length &&
+                        <Ionicons size={60} style={style.checkmarkIcon} name="ios-checkmark-circle"/>
+                        }
+                        {this.state.questions.filter(question => question.correct).length !== this.state.questions.length &&
+                        <Ionicons size={60} style={style.alertIcon} name="ios-alert"/>
+                        }
+                        <Text style={style.quizDoneText}>You've
+                            got {this.state.questions.filter(question => question.correct).length} out
+                            of {this.state.questions.length} questions correct
+                            ({Math.round(this.state.questions.filter(question => question.correct).length / this.state.questions.length * 100)}%).
+                        </Text>
+                    </View>
+                    <View style={{flex: 1, justifyContent: 'flex-end'}}>
+                        <TouchableOpacity
+                            style={[styles.button, style.backToDeckButton]}
+                            onPress={() => this.props.navigation.dispatch(NavigationActions.back())}>
+                            <Text style={styles.buttonText}>Back to Deck</Text>
+                        </TouchableOpacity>
 
-                <View>
-                  <Button raised title="Skip Question" large backgroundColor='#0277BD' borderRadius={5} fontSize={20} fontWeight="500" onPress={this.handleSkip}/>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={this.resetQuiz}>
+                            <Text style={styles.buttonText}>Restart Quiz</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-              </View>
+                }
+                {this.state.questions.length === 0 &&
+                <Text style={style.noQuestions}>There are no questions in this deck. Please create some questions first.</Text>
+                }
             </View>
-          : <View style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-              <View style={{
-                  flex: 0.4,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginTop: 30
-                }}>
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
-                    flexDirection: 'row'
-                  }}>
-                  <Text style={{
-                      color: '#81d135',
-                      fontSize: 25,
-                      fontWeight: '700'
-                    }}>
-                    CORRECT:
-                  </Text>
-                  <Text style={{
-                      color: '#81d135',
-                      fontSize: 25,
-                      fontWeight: '100'
-                    }}>
-                    {`${this.state.correct}`}
-                  </Text>
-                </View>
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
-                    flexDirection: 'row'
-                  }}>
-                  <Text style={{
-                      color: '#e74c3c',
-                      fontSize: 25,
-                      fontWeight: '700'
-                    }}>
-                    INCORRECT:
-                  </Text>
-                  <Text style={{
-                      color: '#e74c3c',
-                      fontSize: 25,
-                      fontWeight: '100'
-                    }}>
-                    {`${this.state.incorrect}`}
-                  </Text>
-                </View>
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
-                    flexDirection: 'row'
-                  }}>
-                  <Text style={{
-                      color: '#2c3e50',
-                      fontSize: 25,
-                      fontWeight: '700'
-                    }}>
-                    SKIPPED:
-                  </Text>
-                  <Text style={{
-                      color: '#2c3e50',
-                      fontSize: 25,
-                      fontWeight: '100'
-                    }}>
-                    {`${this.state.skipped}`}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={{
-                  flex: 0.2,
-                  justifyContent: 'flex-end',
-                  alignItems: 'center'
-                }}>
-                <Button raised large backgroundColor='#4DB6AC' borderRadius={5} fontSize={20} fontWeight="500" title="Go to Deck" onPress={() => {
-                    this.props.navigation.dispatch(resetActionDeck)
-                  }}/>
-              </View>
-              <View style={{
-                  flex: 0.2,
-                  justifyContent: 'flex-end',
-                  alignItems: 'center'
-                }}>
-                <Button raised large backgroundColor='#0288D1' borderRadius={5} fontSize={20} fontWeight="500" title="Restart Quiz" onPress={() => {
-                    this.props.navigation.dispatch(resetAction)
-                  }}/>
-              </View>
-            </View>
-      }
-    </View>)
-  }
+        );
+    }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    margin: 20
-  }
+const style = StyleSheet.create({
+    noQuestions: {
+        fontSize: 24,
+        padding: 12
+    },
+    quizDone: {
+        flex: 1,
+        padding: 12,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    checkmarkIcon: {
+        color: colors.GREEN,
+        marginBottom: 12
+    },
+    alertIcon: {
+        color: colors.RED,
+        marginBottom: 12
+    },
+    quizDoneText: {
+        fontSize: 24,
+        textAlign: 'center'
+    },
+    backToDeckButton: {
+        backgroundColor: colors.ASPHALT
+    }
 });
 
-export default Quiz
+function mapStateToProps(decks) {
+    return {
+        decks
+    }
+}
 
+export default connect(mapStateToProps)(Quiz);

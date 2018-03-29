@@ -1,113 +1,110 @@
 import React from 'react';
-import {StatusBar, View} from 'react-native';
-import {TabNavigator, StackNavigator, DrawerNavigator} from 'react-navigation'
-import {FontAwesome, Ionicons} from '@expo/vector-icons'
-import DeckMain from './components/DeckMain'
-import AddDeck from './components/AddDeck'
-import AddQuestion from './components/AddQuestion'
-import Quiz from './components/quiz'
-/* Constant from Expo */
-import {Constants} from 'expo'
-import decks from './reducers'
-import {createStore} from 'redux'
-import {Provider} from 'react-redux'
-import {fetchDecks} from './actions'
-import {getDecks} from './utils/api'
-import DeckDetail from './components/DeckDetail'
-import {setLocalNotification} from './utils/helper'
-
-const STORE = createStore(decks)
-
-getDecks().then(result => {
-  STORE.dispatch(fetchDecks(result))
-})
-
-const CustomStatusBar = ({
-  backgroundColor,
-  ...props
-}) => (<View style={{
-    backgroundColor,
-    height: Constants.statusBarHeight
-  }}>
-  <StatusBar translucent backgroundColor={backgroundColor} {...props}/>
-</View>)
-
-const StackMain = StackNavigator({
-  DecksList: {
-    screen: DeckMain,
-    navigationOptions: {
-      title: "FlashCards"
-    }
-  },
-  DeckDetail: {
-    screen: DeckDetail,
-    navigationOptions: {
-      title: "Deck Detail"
-    }
-  },
-
-  AddQuestion: {
-    screen: AddQuestion,
-    navigationOptions: {
-      title: "Add Question"
-    }
-  },
-  Quiz: {
-    screen: Quiz,
-    navigationOptions: {
-      title: "Quiz Time"
-    }
-  }
-}, {
-  cardStyle: {
-    backgroundColor: '#fff'
-  }
-})
-
-const StackAddDeck = StackNavigator({
-  AddDeck: {
-    screen: AddDeck,
-    navigationOptions: {
-      title: "Add New Deck"
-    }
-  }
-}, {
-  cardStyle: {
-    backgroundColor: '#fff'
-  }
-})
-
-const Tabs = TabNavigator({
-  Decks: {
-    screen: StackMain,
-    navigationOptions: {
-      tabBarLabel: 'Decks',
-      tabBarIcon: ({tintColor}) => <Ionicons name="ios-home" size={30} color={tintColor}/>
-    }
-  },
-  AddDeck: {
-    screen: StackAddDeck,
-    navigationOptions: {
-      tabBarLabel: 'Add Deck',
-      tabBarIcon: ({tintColor}) => <Ionicons name="ios-add-circle" size={30} color={tintColor}/>
-    }
-  }
-})
+import { StyleSheet, View, Platform } from 'react-native';
+import { StackNavigator, TabNavigator } from 'react-navigation';
+import DeckList from './components/DeckList';
+import NewDeck from './components/NewDeck';
+import FlashCardsStatusBar from './components/FlashCardsStatusBar';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from './helpers/colors';
+import { createStore } from 'redux'
+import { Provider } from 'react-redux'
+import reducer from './reducers'
+import Deck from './components/Deck';
+import AddCard from './components/AddCard';
+import Quiz from './components/Quiz';
+import { setLocalNotification } from './helpers/notifications';
 
 export default class App extends React.Component {
-
-  componentDidMount() {
-    setLocalNotification()
-  }
-  render() {
-    return (<Provider store={STORE}>
-      <View style={{
-          flex: 1
-        }}>
-        <CustomStatusBar backgroundColor="#f5f5f5" barStyle="dark-content"/>
-        <Tabs/>
-      </View>
-    </Provider>);
-  }
+    componentDidMount() {
+        setLocalNotification()
+    }
+    render() {
+        return (
+            <Provider store={createStore(reducer)}>
+                <View style={{flex: 1}}>
+                    <FlashCardsStatusBar/>
+                    <AppNavigation/>
+                </View>
+            </Provider>
+        );
+    }
 }
 
+const Tabs = TabNavigator({
+    DeckList: {
+        screen: DeckList,
+        navigationOptions: {
+            tabBarLabel: 'Deck list',
+            tabBarIcon: <Ionicons size={25} name="ios-albums-outline"/>
+        }
+    },
+    NewDeck: {
+        screen: NewDeck,
+        navigationOptions: {
+            tabBarLabel: 'New deck',
+            tabBarIcon: <Ionicons size={25} name="ios-add-circle-outline"/>
+        }
+    }
+}, {
+    tabBarOptions: {
+        labelStyle: {
+            fontSize: 14
+        },
+        style: {
+            height: 56,
+            backgroundColor: Platform.OS === 'ios' ? colors.WHITE : colors.BLUE,
+            shadowColor: 'rgba(0, 0, 0, 0.24)',
+            shadowOffset: {
+                width: 0,
+                height: 3
+            },
+            shadowRadius: 6,
+            shadowOpacity: 1
+        }
+    }
+});
+
+const AppNavigation = StackNavigator({
+    Home: {
+        screen: Tabs,
+        navigationOptions: {
+            header: null
+        }
+    },
+    Deck: {
+        screen: Deck,
+        navigationOptions: {
+            headerTintColor: colors.WHITE,
+            headerStyle: {
+                backgroundColor: colors.BLUE,
+            }
+        }
+    },
+    AddCard: {
+        screen: AddCard,
+        navigationOptions: {
+            headerTintColor: colors.WHITE,
+            headerStyle: {
+                backgroundColor: colors.BLUE,
+            }
+        }
+    },
+    Quiz: {
+        screen: Quiz,
+        navigationOptions: {
+            headerTintColor: colors.WHITE,
+            headerStyle: {
+                backgroundColor: colors.BLUE,
+            }
+        }
+    }
+});
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+});
