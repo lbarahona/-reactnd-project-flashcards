@@ -1,6 +1,6 @@
 # FlashCards Project
 
-This is the complete project for the final assessment project for Udacity's React Native course .A mobile application (for both Android and iOS) that allows users to study collections of flashcards. The app allow users to create different categories of flashcards called "decks", add flashcards to those decks, then take quizzes on those decks.
+This is the complete final assessment project for Udacity's React Native course .A mobile application (for both Android and iOS) that allows users to study collections of flashcards. The app allow users to create different categories of flashcards called "decks", add flashcards to those decks, then take quizzes on those decks.
 
 ## Requirements
 
