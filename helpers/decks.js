@@ -1,6 +1,6 @@
 import { AsyncStorage } from 'react-native';
 
-export const FLASHCARDS_STORAGE_KEY = 'MobileFlashCards:bunny-glass-water-lord-tree';
+export const FLASHCARDS_STORAGE_KEY = 'Flashcards:deck';
 
 export function formatDeckResults(results) {
     return results === null
@@ -10,45 +10,37 @@ export function formatDeckResults(results) {
 
 function setInitData() {
     const initData = {
-        ['Dragon Ball']: {
-            title: 'Dragon Ball',
+        ['Bible']: {
+            title: 'Bible',
             questions: [
                 {
-                    question: `What is the name of Goku's sons?`,
-                    answer: 'Gohan and Goten.'
+                    question: `What is the first book of The Bible?`,
+                    answer: 'Genesis'
                 },
                 {
-                    question: `How much was the power level that surprised Vegeta?`,
-                    answer: '9000.'
+                    question: `How many books does the new testament have?`,
+                    answer: '27.'
                 },
                 {
-                    question: `Despite participating in 6 World Martial Arts Tournaments, how many did Goku win?`,
-                    answer: 'Only one.'
+                    question: `Mathhew the disciple was a ...?`,
+                    answer: 'Tax collector.'
                 }
             ]
         },
-        ['The Office']: {
-            title: 'The Office',
+        ['Geography']: {
+            title: 'Geography',
             questions: [
                 {
-                    question: `Who had their first day in the first episode?`,
-                    answer: 'Ryan Howard.'
+                    question: `In which state is the historic Shinnecock Hills Golf Club located?`,
+                    answer: 'New York.'
                 },
                 {
-                    question: `Which Dundy does Phyllis take home at the first Dundies?`,
-                    answer: 'The Bushiest Beaver Dundie.'
+                    question: `How many U.S. states border the Gulf of Mexico?`,
+                    answer: 'Five - From east to west:Florida, Alabama, Mississippi, Louisiana, and Texas.'
                 },
                 {
-                    question: `What is on Todd Packer's license plate?`,
-                    answer: 'WLHUNG.'
-                },
-                {
-                    question: `What is the name of Dwight's sensei?`,
-                    answer: 'Ira.'
-                },
-                {
-                    question: `Who ends up with the Video iPod at the end of Secret Santa?`,
-                    answer: 'Dwight.'
+                    question: `Which Nordic country was first to give women the right to vote, in 1906?`,
+                    answer: 'Finland.'
                 }
             ]
         }
